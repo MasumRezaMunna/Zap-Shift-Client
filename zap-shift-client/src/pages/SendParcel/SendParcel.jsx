@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { data, useLoaderData } from "react-router";
+import Swal from "sweetalert2";
 
 const SendParcel = () => {
   const {
@@ -16,19 +17,56 @@ const SendParcel = () => {
   const senderRegion = useWatch({ control, name: "senderRegion" });
   const receiverRegion = useWatch({ control, name: "receiverRegion" });
 
-
   const districtByRegion = (region) => {
     const regionDistricts = serviceCenters.filter((c) => c.region === region);
     const districts = regionDistricts.map((d) => d.district);
     return districts;
   };
 
-  console.log(regions);
+  // console.log(regions);
 
   const handleSendParcel = (data) => {
     console.log(data);
-    const sameDistrict = data.senderDistrict === data.receiverDistrict;
-    console.log(sameDistrict)
+    const isDocument = data.parcelType === "document";
+    const isSameDistrict = data.senderDistrict === data.receiverDistrict;
+
+    const parcelWeight = parseFloat(data.parcelWeight);
+
+    let cost = 0;
+    if (isDocument) {
+      cost = isSameDistrict ? 60 : 80;
+    } else {
+      if (parcelWeight < 3) {
+        cost = isSameDistrict ? 110 : 150;
+      } else {
+        const minCharge = isSameDistrict ? 110 : 150;
+        const extraWeight = parcelWeight - 3;
+        const extraCharge = isSameDistrict
+          ? extraWeight * 40
+          : extraWeight * 40 + 40;
+        cost = minCharge + extraCharge;
+      }
+    }
+
+    console.log("cost", cost);
+
+    Swal.fire({
+      title: "Agree with the cost?",
+      text: `You will be charged ${cost} taka!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "I agree !",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success",
+        });
+      }
+    });
   };
   return (
     <div>
@@ -143,7 +181,7 @@ const SendParcel = () => {
             {/* sender address */}
             <label className="label mt-4">Sender Address</label>
             <input
-              type="number"
+              type="text"
               {...register("senderAddress")}
               className="input w-full"
               placeholder="Sender Address"
@@ -158,7 +196,7 @@ const SendParcel = () => {
             {/* receiver name */}
             <label className="label">Receiver Name</label>
             <input
-              type="number"
+              type="text"
               {...register("receiverName")}
               className="input w-full"
               placeholder="Receiver Name"
@@ -167,7 +205,7 @@ const SendParcel = () => {
             {/* receiver email */}
             <label className="label">Receiver Email</label>
             <input
-              type="number"
+              type="email"
               {...register("receiverEmail")}
               className="input w-full"
               placeholder="Receiver Email"
@@ -212,7 +250,7 @@ const SendParcel = () => {
             {/* receiver address */}
             <label className="label mt-4">Receiver Address</label>
             <input
-              type="number"
+              type="text"
               {...register("receiverAddress")}
               className="input w-full"
               placeholder="Receiver Address"
